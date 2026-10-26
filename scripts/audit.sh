@@ -47,5 +47,28 @@ if (( level >= 4 )); then
   check 'No world-writable web files' '' "$writable"
   check 'TLS key mode' 600 "$(sudo -n stat -c '%a' /etc/ssl/private/devops.key 2>/dev/null)"
 fi
+if (( level >= 5 )); then
+  echo '[5] Containers'
+  check 'Docker active' active "$(systemctl is-active docker 2>/dev/null)"
+  compose=(docker compose --project-directory "$account_home/app")
+  db_id=$("${compose[@]}" ps -q db 2>/dev/null)
+  check 'PostgreSQL healthy' healthy "$(docker inspect -f '{{.State.Health.Status}}' "$db_id" 2>/dev/null)"
+  check 'App published only on loopback' '127.0.0.1:5000' "$("${compose[@]}" port app 5000 2>/dev/null)"
+  db_ports=$(docker inspect -f '{{json .NetworkSettings.Ports}}' "$db_id" 2>/dev/null)
+  check 'Database has no published host port' ok "$(grep -q '"5432/tcp":null' <<<"$db_ports" && echo ok || echo fail)"
+  exposed=$(ss -H -tln | awk '$4 ~ /:(5000|5432)$/ && $4 !~ /^127\.0\.0\.1:/ {print $4}')
+  check 'No external 5000/5432 listener' '' "$exposed"
+  check 'App environment mode' 600 "$(stat -c '%a' "$account_home/app/.env" 2>/dev/null)"
+fi
+if (( level >= 6 )); then
+  echo '[6] Control work 2'
+  compose=(docker compose --project-directory "$account_home/kr2")
+  redis_id=$("${compose[@]}" ps -q redis 2>/dev/null)
+  check 'Redis healthy' healthy "$(docker inspect -f '{{.State.Health.Status}}' "$redis_id" 2>/dev/null)"
+  check 'KR2 published only on loopback' '127.0.0.1:8002' "$("${compose[@]}" port app 8002 2>/dev/null)"
+  check 'KR2 environment mode' 600 "$(stat -c '%a' "$account_home/kr2/.env" 2>/dev/null)"
+  check 'KR2 certificate validity' ok "$(status openssl x509 -checkend 2592000 -noout -in /etc/ssl/certs/kr2.crt)"
+  check 'KR2 site enabled' ok "$(test -L /etc/nginx/sites-enabled/kr2 && echo ok || echo fail)"
+fi
 printf 'PASS=%s FAIL=%s\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]
