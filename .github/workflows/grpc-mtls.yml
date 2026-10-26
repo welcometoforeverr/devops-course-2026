@@ -1,0 +1,48 @@
+name: gRPC mTLS integration
+on:
+  pull_request:
+    branches: [dev]
+    paths: ['practice4/**', '.github/workflows/grpc-mtls.yml']
+  push:
+    branches: ['feature/grpc-mtls', dev]
+    paths: ['practice4/**', '.github/workflows/grpc-mtls.yml']
+permissions:
+  contents: read
+jobs:
+  ubuntu-integration:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.0'
+          cache: false
+      - name: Install nginx and CFSSL
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y nginx golang-cfssl protobuf-compiler
+      - name: Install Python dependencies and Chromium
+        run: |
+          python -m pip install -r practice4/requirements.txt playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Environment versions
+        run: |
+          cat /etc/os-release
+          python --version
+          go version
+          nginx -v
+          protoc --version
+          cfssl version
+      - name: Build and verify complete stack
+        env:
+          CAPTURE: '1'
+        run: bash practice4/verify.sh
+      - name: Save evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: practice4-evidence
+          path: practice4/evidence/

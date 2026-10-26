@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Python и Go через gRPC</title><style>
+body {font:20px Arial,sans-serif;max-width:900px;margin:70px auto;color:#192d44;background:#f5f8fb}
+h1 {font-size:30px} main {padding:40px;background:white;border-radius:18px}
+.dice {display:flex;justify-content:space-around;align-items:center;margin:35px 0}
+.die {font-size:100px;text-align:center} .label {font-size:17px;display:block}
+button {font-size:20px;padding:14px 25px;border:0;border-radius:9px;background:#2371bb;color:white;cursor:pointer}
+form{text-align:center} a{color:#2371bb} .error{color:#a11} p{line-height:1.6}
+</style></head><body><main><h1>Python и Go через gRPC</h1>
+<p>Django вызывает Go-сервис напрямую и через nginx. Оба внешних соединения используют mTLS.</p>
+<div class="dice"><div><span class="label">Напрямую · 8443</span><div class="die">{{ icon_a }}</div><span>Значение: {{ a }}</span></div>
+<strong>{{ sign }}</strong><div><span class="label">Через nginx · 9448</span><div class="die">{{ icon_b }}</div><span>Значение: {{ b }}</span></div></div>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<form method="post">{% csrf_token %}<button type="submit">Бросить кубики</button></form>
+<p><a href="/grpc">Прямой запрос</a> · <a href="/nginx">Запрос через nginx</a></p>
+</main></body></html>
