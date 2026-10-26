@@ -1,0 +1,42 @@
+name: Build verified practice reports
+on:
+  push:
+    branches: [reports/practices-3-4]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  reports:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install document renderer and fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libreoffice-writer poppler-utils fonts-liberation fonts-dejavu
+          python -m pip install python-docx pillow pdf2image playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Download real lab evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: practice4-evidence
+          run-id: 40259107686
+          github-token: ${{ github.token }}
+          path: evidence4
+      - name: Build documents with screenshots
+        run: python reporting/make_reports.py
+      - name: Render each DOCX to page images
+        run: |
+          python reporting/render_docx.py "report-output/Практическая работа 3.docx" --output_dir report-output/qa3 --emit_pdf
+          python reporting/render_docx.py "report-output/Практическая работа 4.docx" --output_dir report-output/qa4 --emit_pdf
+      - name: Save reports and review pages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: practice-reports-and-qa
+          path: |
+            report-output/
+            report-screens/
