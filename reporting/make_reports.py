@@ -3,6 +3,7 @@ from pathlib import Path
 import html
 import os
 import re
+import shutil
 from docx import Document
 from docx.shared import Cm, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -22,7 +23,8 @@ SC.mkdir(exist_ok=True)
 
 def capture_sources():
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        chrome=shutil.which('google-chrome')
+        browser = p.chromium.launch(headless=True, executable_path=chrome)
         page = browser.new_page(viewport={'width': 1280, 'height': 820}, device_scale_factor=1)
         for name, url in {
             'dev': BASE+'/tree/dev',
