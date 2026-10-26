@@ -125,3 +125,28 @@ sudo ufw status verbose
 5. Изменить NAT на guest2222, проверить новую сессию; применить команды раздела 6.
 6. Задать hostname и /etc/hosts из раздела 2. Проверить `sudo AUDIT_LEVEL=3 scripts/audit.sh`.
 
+## 8. Nginx и HTTPS
+
+Статика `/var/www/devops-site`, владелец devops:devops, каталоги 755, файлы 644.
+www-data может читать, но не писать. Конфигурация `infra/devops-site.conf` →
+`/etc/nginx/sites-available/devops-site`; симлинк в sites-enabled; default отключён.
+После ПР7 включён `/etc/nginx/snippets/devops-app.conf` из infra/app-location.conf.
+
+```bash
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/ssl/private/devops.key -out /etc/ssl/certs/devops.crt \
+  -subj '/CN=devops.local/O=DevOps training' -addext 'subjectAltName=DNS:devops.local'
+sudo chmod 600 /etc/ssl/private/devops.key
+sudo chmod 644 /etc/ssl/certs/devops.crt
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Срок — 365 дней с выпуска; реальные notBefore/notAfter проверяются
+`openssl x509 -in /etc/ssl/certs/devops.crt -noout -dates`.
+HTTP301→HTTPS, TLS1.2/1.3. HSTS не включён.
+Журналы `/var/log/nginx/devops-site.access.log` и `devops-site.error.log`.
+Публичный сертификат скопирован в `~/devops.crt` на клиенте для --cacert.
+Доставка: `scripts/deploy.sh --dry-run`, затем `scripts/deploy.sh` из чистого Git-дерева.
+Для явного пути сертификата: переменная DEPLOY_CA_CERT. Скрипт открывает один SSH
+через rsync; итоговый HTTPS проверяет curl на клиенте.
+

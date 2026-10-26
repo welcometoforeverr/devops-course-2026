@@ -38,5 +38,14 @@ check 'Default incoming deny' ok "$(grep -q 'Default: deny (incoming)' <<<"$fire
 echo '[3] Accounts'
 id devops
 check 'devops in sudo group' ok "$(id -nG devops | tr ' ' '\n' | grep -qx sudo && echo ok || echo fail)"
+if (( level >= 4 )); then
+  echo '[4] Web server'
+  check 'nginx active' active "$(systemctl is-active nginx 2>/dev/null)"
+  check 'nginx syntax' ok "$(status sudo -n nginx -t)"
+  check 'Certificate valid for threshold' ok "$(status openssl x509 -checkend "${AUDIT_CERT_SECONDS:-2592000}" -noout -in /etc/ssl/certs/devops.crt)"
+  writable=$(find /var/www/devops-site -type f -perm -o+w -print 2>/dev/null) || writable=ERROR
+  check 'No world-writable web files' '' "$writable"
+  check 'TLS key mode' 600 "$(sudo -n stat -c '%a' /etc/ssl/private/devops.key 2>/dev/null)"
+fi
 printf 'PASS=%s FAIL=%s\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]
