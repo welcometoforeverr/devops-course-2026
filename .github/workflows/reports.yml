@@ -26,6 +26,15 @@ jobs:
           run-id: 40259107686
           github-token: ${{ github.token }}
           path: evidence4
+      - name: Reuse captured repository pages
+        uses: actions/download-artifact@v4
+        with:
+          name: practice-reports-and-qa
+          run-id: 40259748359
+          github-token: ${{ github.token }}
+          path: reports-last
+      - name: Restore captured pages
+        run: cp -r reports-last/report-screens .
       - name: Build documents with screenshots
         run: python reporting/make_reports.py
       - name: Render each DOCX to page images

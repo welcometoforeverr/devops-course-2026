@@ -34,6 +34,8 @@ def capture_sources():
             'nginx': BASE+'/blob/feature/grpc-mtls/practice4/nginx.conf',
             'django': BASE+'/blob/feature/grpc-mtls/practice4/client/urls.py',
         }.items():
+            if (SC/(name+'.png')).exists():
+                continue
             page.goto(url, wait_until='domcontentloaded', timeout=60000)
             if '/blob/' in url:
                 page.get_by_role('textbox',name='file content').wait_for(state='visible',timeout=30000)
@@ -55,10 +57,10 @@ def capture_sources():
                     match=re.search(r'(DIRECT mTLS:|NGINX mTLS:|REJECTED without|CONCURRENT:|DJANGO:|HTTP 800|Ran 6 tests|^OK$)',line)
                     if match:selected.append(line[match.start():])
                 text='\n'.join(selected)
-            content='<html lang="ru"><meta charset="utf-8"><style>body{font:19px Arial;margin:40px;color:#172333}h1{font-size:25px}pre{font:16px/1.55 monospace;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #ccd3da;padding:24px}</style>'
+            content='<html lang="ru"><meta charset="utf-8"><style>body{font:19px Arial;margin:40px;color:#172333}h1{font-size:25px}pre{font:16px/1.55 "DejaVu Sans Mono","DejaVu Sans","Noto Color Emoji",monospace;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #ccd3da;padding:24px}</style>'
             content+='<h1>Журнал реального запуска GitHub Actions</h1><p>Ubuntu 24.04 · run '+RUN4+' · '+source+'</p><pre>'+html.escape(text)+'</pre>'
             page.set_content(content)
-            page.screenshot(path=str(SC/(name+'.png')),full_page=True)
+            page.locator('body').screenshot(path=str(SC/(name+'.png')))
         browser.close()
 
 def para(doc,text='',bold=False,align=None):
@@ -130,6 +132,12 @@ def init(num,topic):
     s.header_distance=Cm(0.8);s.footer_distance=Cm(0.8);s.different_first_page_header_footer=True
     for name in ('Normal','Title','Subtitle','Heading 1','Heading 2','Caption'):
         st=d.styles[name];st.font.name='Times New Roman';st.font.color.rgb=RGBColor(0,0,0)
+        fonts=st._element.get_or_add_rPr().find(qn('w:rFonts'))
+        for key in list(fonts.attrib):
+            if 'theme' in key.lower():del fonts.attrib[key]
+        for key in ('ascii','hAnsi','eastAsia','cs'):fonts.set(qn('w:'+key),'Times New Roman')
+    for border in d.styles.element.xpath('.//w:pBdr'):
+        border.getparent().remove(border)
     st=d.styles['Normal'];st.font.size=Pt(12)
     st.paragraph_format.line_spacing=1.15;st.paragraph_format.space_after=Pt(7)
     st.paragraph_format.widow_control=True
