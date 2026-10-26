@@ -150,3 +150,29 @@ HTTP301→HTTPS, TLS1.2/1.3. HSTS не включён.
 Для явного пути сертификата: переменная DEPLOY_CA_CERT. Скрипт открывает один SSH
 через rsync; итоговый HTTPS проверяет curl на клиенте.
 
+## 9. Docker Compose
+
+Docker Engine установлен из официального apt-репозитория download.docker.com,
+пакеты docker-ce/docker-ce-cli/containerd.io/docker-buildx-plugin/docker-compose-plugin.
+Доступ к docker group эквивалентен root.
+Проект ПР7: `~/app`, app и db, сеть backend, том db_data; app127.0.0.1:5000,
+PostgreSQL16-alpine без публикации. Секрет `.env` создаётся на VM, режим 600:
+POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD (новый случайный), DB_HOST=db.
+`rsync -avz --delete --exclude=.env app/ devops:app/` сохраняет серверный .env.
+`docker compose up -d --build --wait`; `docker compose ps/logs`;
+`docker compose down` сохраняет том; `down -v` удаляет его данные.
+Службы включены в systemd, контейнеры имеют restart unless-stopped.
+После ребута проверять readiness и оба HTTPS-ресурса.
+
+## 10. Контрольная работа 2
+
+Номер по списку 10 → вариант2: notes.devops.local, порт8002.
+Проект `~/kr2`, app + redis7-alpine, сеть backend, том redis_data, AOF включён.
+`.env` содержит новый REDIS_PASSWORD, создаётся один раз и имеет режим600;
+он исключён из Git и контекста Docker. Оба сервиса получают один пароль через
+интерполяцию Compose; healthcheck использует $$ для раскрытия внутри контейнера.
+App публикуется только127.0.0.1:8002; Redis не публикуется.
+Отдельный Nginx `/etc/nginx/sites-available/kr2`, симлинк sites-enabled/kr2,
+сертификат `/etc/ssl/certs/kr2.crt`, ключ `/etc/ssl/private/kr2.key` root600.
+SAN DNS:notes.devops.local, выпуск аналогичен разделу8 с отдельными именами файлов.
+`sudo AUDIT_LEVEL=6 scripts/audit.sh` проверяет все этапы, намеренные нарушения возвращают1.
