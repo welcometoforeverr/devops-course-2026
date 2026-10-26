@@ -5,3 +5,5 @@ Workflow `.github/workflows/python-ci.yml` запускается при `pull_r
 
 Проверки: `python -m unittest discover -s tests -v` и `python -m pylint calculator.py tests --fail-under=9.0`.
 Отчёт Pylint сохраняется как артефакт `pylint-report`. Ошибки анализатора не подавляются.
+
+В ветке `feature/calculator-multiply` добавлена операция умножения и проверены положительные, отрицательные множители и ноль.

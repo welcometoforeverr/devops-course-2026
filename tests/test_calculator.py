@@ -2,7 +2,7 @@
 
 import unittest
 
-from calculator import add, subtract
+from calculator import add, multiply, subtract
 
 
 class CalculatorTests(unittest.TestCase):
@@ -19,6 +19,12 @@ class CalculatorTests(unittest.TestCase):
         self.assertEqual(subtract(7, 2), 5)
         self.assertEqual(subtract(2, 7), -5)
         self.assertEqual(subtract(-2, -3), 1)
+
+    def test_multiply(self):
+        """Multiplication supports zero and negative factors."""
+        self.assertEqual(multiply(6, 7), 42)
+        self.assertEqual(multiply(0, 100), 0)
+        self.assertEqual(multiply(-3, 4), -12)
 
 
 if __name__ == "__main__":
