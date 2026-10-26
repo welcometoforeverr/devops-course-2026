@@ -9,7 +9,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_CELL_VERTICAL_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 
 BASE = 'https://github.com/welcometoforeverr/devops-course-2026'
 RUN3 = '40258811782'
@@ -34,7 +34,13 @@ def capture_sources():
             'nginx': BASE+'/blob/feature/grpc-mtls/practice4/nginx.conf',
             'django': BASE+'/blob/feature/grpc-mtls/practice4/client/urls.py',
         }.items():
-            page.goto(url, wait_until='networkidle')
+            page.goto(url, wait_until='domcontentloaded', timeout=60000)
+            if '/blob/' in url:
+                page.get_by_role('textbox',name='file content').wait_for(state='visible',timeout=30000)
+            try:
+                page.wait_for_load_state('networkidle',timeout=5000)
+            except PlaywrightTimeout:
+                pass
             page.screenshot(path=str(SC/(name+'.png')))
         for name, source in [('certificates','certificates.txt'),('build','build.txt'),
                               ('checks','integration.txt')]:
@@ -256,3 +262,4 @@ if __name__=='__main__':
     capture_sources()
     report3()
     report4()
+
