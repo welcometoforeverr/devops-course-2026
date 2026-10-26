@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.log
+lint.txt
+practice4/certs/*.pem
+practice4/certs/*.csr
+practice4/client/api/api_pb2*.py
+practice4/server/api/api*.go
+practice4/dice-server
+practice4/evidence/

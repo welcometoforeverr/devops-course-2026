@@ -1,11 +1,14 @@
-# Calculator app
+"""Basic arithmetic operations used in the DevOps course project."""
+
 
 def add(a, b):
+    """Return the sum of two numbers."""
     return a + b
 
-# TODO: add more functions
 
 def subtract(a, b):
-    return a - b  # fixed
+    """Return the difference of two numbers."""
+    return a - b
+
 
 IMPORTANT_FIX = True
